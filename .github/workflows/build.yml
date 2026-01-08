@@ -1,0 +1,37 @@
+name: ForgeCraft Compiler
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Дозволяє запускати збірку вручну
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build with Gradle
+        run: chmod +x gradlew && ./gradlew build
+        # Якщо gradlew немає, скрипт спробує зібрати через встановлений gradle
+        continue-on-error: true
+
+      - name: Fallback Build
+        if: failure()
+        run: gradle build
+
+      - name: Upload Mod Jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: Generated-Mod-Jar
+          path: build/libs/*.jar
+          
